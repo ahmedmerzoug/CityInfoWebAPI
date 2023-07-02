@@ -1,7 +1,9 @@
 using CityInfoAPI;
 using CityInfoAPI.Abstraction;
+using CityInfoAPI.DbContexts;
 using CityInfoAPI.Services;
 using Microsoft.AspNetCore.StaticFiles;
+using Microsoft.EntityFrameworkCore;
 using Serilog;
 
 Log.Logger = new LoggerConfiguration()
@@ -32,6 +34,9 @@ builder.Services.AddTransient<IMailService, CloudMailService>();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+builder.Services.AddDbContext<CityInfoContext>(
+    dbContextOptions => dbContextOptions.UseSqlServer("Server=DESKTOP-FBTP4BE;Database=CityInfo;Trusted_Connection=True;MultipleActiveResultSets=true"));
 
 var app = builder.Build();
 

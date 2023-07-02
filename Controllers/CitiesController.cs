@@ -1,4 +1,5 @@
 ﻿using CityInfoAPI.Abstraction;
+using CityInfoAPI.Entities;
 using CityInfoAPI.Models;
 using CityInfoAPI.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -11,8 +12,6 @@ namespace CityInfoAPI.Controllers
     {
 
         public CitiesDataStore _citiesDataStore;
-
-        //public static CitiesDataStore Instance { get; } = new CitiesDataStore();
 
         public CitiesController(CitiesDataStore citiesDataStore)
         {
