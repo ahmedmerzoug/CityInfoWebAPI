@@ -1,4 +1,6 @@
-﻿using CityInfoAPI.Models;
+﻿using CityInfoAPI.Abstraction;
+using CityInfoAPI.Models;
+using CityInfoAPI.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CityInfoAPI.Controllers
@@ -7,10 +9,19 @@ namespace CityInfoAPI.Controllers
     [ApiController]
     public class CitiesController : ControllerBase
     {
+
+        public CitiesDataStore _citiesDataStore;
+
+        //public static CitiesDataStore Instance { get; } = new CitiesDataStore();
+
+        public CitiesController(CitiesDataStore citiesDataStore)
+        {
+            _citiesDataStore = citiesDataStore ?? throw new ArgumentNullException(nameof(citiesDataStore));
+        }
         [HttpGet]
         public ActionResult<IEnumerable<CityDto>> GetTestValues()
         {
-            var cityToReturn = CitiesDataStore.Instance.Cities;
+            var cityToReturn = _citiesDataStore.Cities;
             return Ok(cityToReturn);
         }
 
@@ -18,7 +29,7 @@ namespace CityInfoAPI.Controllers
         public ActionResult<CityDto> Get(int id)
         {
             // Logic for the second GET method
-            var cityToReturn = CitiesDataStore.Instance.Cities.FirstOrDefault(x=>x.Id==id);
+            var cityToReturn = _citiesDataStore.Cities.FirstOrDefault(x=>x.Id==id);
             if(cityToReturn==null)
             {
                 return NotFound();
