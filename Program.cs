@@ -24,6 +24,9 @@ builder.Services.AddControllers(option =>option.ReturnHttpNotAcceptable = true).
 
 builder.Services.AddSingleton<FileExtensionContentTypeProvider>();
 builder.Services.AddSingleton<CitiesDataStore>();
+builder.Services.AddScoped<ICityInfoRepository, CityInfoRepository>();
+
+builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
 #if DEBUG
 builder.Services.AddTransient<IMailService, LocalMailService>();
@@ -36,7 +39,8 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddDbContext<CityInfoContext>(
-    dbContextOptions => dbContextOptions.UseSqlServer("Server=DESKTOP-FBTP4BE;Database=CityInfo;Trusted_Connection=True;MultipleActiveResultSets=true"));
+    dbContextOptions => dbContextOptions.UseSqlServer(builder.Configuration["ConnectionStrings:CityInfoDBConnectionString"]));
+
 
 var app = builder.Build();
 
