@@ -28,8 +28,20 @@ namespace CityInfoAPI.Controllers
         public async Task<IActionResult> GetCities(string? name, string? searchQuery, bool includePointOfIntrest = false,
             int pageNumber = 1, int pageSize = 10)
         {
-            
-            return Ok("Test api in azure dep app service");
+            if(pageSize> maxCitiesPageSize)
+            {
+                pageSize = maxCitiesPageSize;
+            }
+
+            var (cityEntities, paginationMetadata) = await _cityInfoRepository.GetCitiesAsync(name, searchQuery, includePointOfIntrest, pageNumber, pageSize);
+            Response.Headers.Add("X-Pagination", JsonSerializer.Serialize(paginationMetadata));
+
+            if (includePointOfIntrest)
+            {
+                return Ok(_mapper.Map<IEnumerable<CityDto>>(cityEntities));
+            }
+
+            return Ok(_mapper.Map<IEnumerable<CityWithoutPointsOfInterestDto>>(cityEntities));
        
 
 
