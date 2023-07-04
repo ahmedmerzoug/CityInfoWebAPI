@@ -15,14 +15,50 @@ namespace CityInfoAPI.Services
             _context = context ?? throw new ArgumentNullException(nameof(context));
         }
 
-        public async Task<IEnumerable<City>> GetCitiesAsync()
+        public async Task<IEnumerable<City>> GetCitiesAsync(bool includePointOfIntrest)
         {
+            if (includePointOfIntrest)
+            {
+                return await _context.Cities.Include(c => c.PointsOfInterest).OrderBy(c => c.Name).ToListAsync();
+            }
             return await _context.Cities.OrderBy(c => c.Name).ToListAsync();
+        }
+
+        public async Task<(IEnumerable<City>, PaginationMetadata)> GetCitiesAsync(string? name, string? searchQuery, bool includePointOfIntrest,
+            int pageNumber, int pageSize)
+        {
+
+            var collection = _context.Cities as IQueryable<City>;
+
+            if (!string.IsNullOrEmpty(name))
+            {
+                name = name.Trim();
+                collection = collection.Include(c => c.PointsOfInterest).Where(c => c.Name == name);
+            }
+
+            if (!string.IsNullOrEmpty(searchQuery))
+            {
+                searchQuery = searchQuery.Trim();
+                collection = collection.Include(c => c.PointsOfInterest)
+                    .Where(c => c.Name.Contains(searchQuery)
+                    || c.Description!=null && c.Description.Contains(searchQuery));
+            }
+
+            var totalItemCount = await collection.CountAsync();
+            var paginationMetadata = new PaginationMetadata(totalItemCount, pageSize, pageNumber);
+
+
+            var collectionToReturn = await collection.OrderBy(c => c.Name)
+                .Skip(pageSize * (pageNumber - 1 ))
+                .Take(pageSize)
+                .ToListAsync();
+
+            return (collectionToReturn, paginationMetadata);
         }
 
         public async Task<City?> GetCityAsync(int cityId, bool includePointsOfInterest)
         {
-            if(includePointsOfInterest)
+            if (includePointsOfInterest)
             {
                 return await _context.Cities.Include(c => c.PointsOfInterest)
                     .Where(c => c.Id == cityId).FirstOrDefaultAsync();
@@ -34,7 +70,7 @@ namespace CityInfoAPI.Services
         public async Task<PointOfInterest?> GetPointOfInterestForCityAsync(int cityId, int pointOfInterestId)
         {
             return await _context.PointsOfInterest
-                  .Where(p=>p.CityId == cityId && p.Id == pointOfInterestId)
+                  .Where(p => p.CityId == cityId && p.Id == pointOfInterestId)
                   .FirstOrDefaultAsync();
         }
 
@@ -66,10 +102,10 @@ namespace CityInfoAPI.Services
 
         public async Task<bool> SaveChnagesAsync()
         {
-            return (await _context.SaveChangesAsync() >=0);
+            return (await _context.SaveChangesAsync() >= 0);
         }
 
-      
+
 
     }
 }

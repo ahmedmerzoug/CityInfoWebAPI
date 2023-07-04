@@ -5,6 +5,7 @@ using CityInfoAPI.Models;
 using CityInfoAPI.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Text.Json;
 
 namespace CityInfoAPI.Controllers
 {
@@ -15,7 +16,7 @@ namespace CityInfoAPI.Controllers
 
         public ICityInfoRepository _cityInfoRepository;
         public IMapper _mapper;
-
+        const int maxCitiesPageSize = 20;
         public CitiesController(ICityInfoRepository cityInfoRepository, IMapper mapper)
         {
             _cityInfoRepository = cityInfoRepository ?? throw new ArgumentNullException(nameof(cityInfoRepository));
@@ -24,10 +25,25 @@ namespace CityInfoAPI.Controllers
 
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<CityWithoutPointsOfInterestDto>>> GetCities()
+        public async Task<IActionResult> GetCities(string? name, string? searchQuery, bool includePointOfIntrest = false,
+            int pageNumber = 1, int pageSize = 10)
         {
-            var cityEntities = await _cityInfoRepository.GetCitiesAsync();
+            if(pageSize> maxCitiesPageSize)
+            {
+                pageSize = maxCitiesPageSize;
+            }
+
+            var (cityEntities, paginationMetadata) = await _cityInfoRepository.GetCitiesAsync(name, searchQuery, includePointOfIntrest, pageNumber, pageSize);
+            Response.Headers.Add("X-Pagination", JsonSerializer.Serialize(paginationMetadata));
+
+            if (includePointOfIntrest)
+            {
+                return Ok(_mapper.Map<IEnumerable<CityDto>>(cityEntities));
+            }
+
             return Ok(_mapper.Map<IEnumerable<CityWithoutPointsOfInterestDto>>(cityEntities));
+       
+
 
             //Old way, we use Auto Mapper now
             //var results = new List<CityWithoutPointsOfInterestDto>();
@@ -59,7 +75,7 @@ namespace CityInfoAPI.Controllers
             {
                 return Ok(_mapper.Map<CityDto>(cityToReturn));
             }
-            
+
             return Ok(_mapper.Map<CityWithoutPointsOfInterestDto>(cityToReturn));
 
         }
